@@ -1,0 +1,301 @@
+:root {
+  /* AI GlobeScout — Midnight Atmosphere */
+  --bg-deep: #050B1A;
+  --bg: #0A1628;
+  --card: #0F1F38;
+  --card-elevated: #162A4A;
+  --border: #1E3358;
+  --border-strong: #2C4A7C;
+
+  --text: #F0F4F8;
+  --text-muted: #8BA3C7;
+  --text-dim: #5A7299;
+
+  --accent: #4FD1C5;
+  --accent-glow: rgba(79, 209, 197, 0.35);
+  --gold: #FFD166;
+
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+  --transition: 200ms ease;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(79, 209, 197, 0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 90% 60% at 50% 100%, rgba(46, 26, 90, 0.25) 0%, transparent 60%);
+  background-attachment: fixed;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: 1rem;
+  gap: 1rem;
+}
+
+.app__header {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  box-shadow: var(--shadow);
+}
+
+.app__logo-mark {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 18px var(--accent-glow);
+}
+
+.app__title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.app__tagline {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.125rem;
+}
+
+.app__main {
+  flex: 1;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  box-shadow: var(--shadow);
+}
+
+.app__placeholder {
+  color: var(--text-dim);
+  font-style: italic;
+  text-align: center;
+  padding: 2rem 1rem;
+}
+
+/* Empty state */
+.app__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 3rem 1rem;
+  color: var(--text-dim);
+}
+
+.app__empty-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--card-elevated);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+}
+
+.app__empty-text {
+  font-size: 0.8125rem;
+  font-style: italic;
+}
+
+/* Location input */
+.location-input {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.location-input__field {
+  flex: 1;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.75rem;
+  color: var(--text);
+  font-size: 0.875rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.location-input__field::placeholder {
+  color: var(--text-dim);
+}
+
+.location-input__field:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.location-input__button {
+  background: var(--accent);
+  color: var(--bg-deep);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0 0.75rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition), opacity var(--transition);
+}
+
+.location-input__button:hover:not(:disabled) {
+  background: #6FE3D8;
+}
+
+.location-input__button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Location list */
+.location-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Location card */
+.location-card {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  background: var(--card-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.625rem 0.75rem;
+  transition: border-color var(--transition);
+}
+
+.location-card:hover {
+  border-color: var(--border-strong);
+}
+
+.location-card__pin {
+  color: var(--gold);
+  flex-shrink: 0;
+  display: flex;
+}
+
+.location-card__name {
+  flex: 1;
+  color: var(--text);
+  font-size: 0.875rem;
+}
+
+.location-card__delete {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color var(--transition), background var(--transition);
+}
+
+.location-card__delete:hover {
+  color: var(--text);
+  background: var(--bg);
+}
+
+/* Tab bar */
+.tab-bar {
+  display: flex;
+  gap: 0.25rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.25rem;
+  margin-bottom: 1rem;
+}
+
+.tab-bar__tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: color var(--transition), background var(--transition);
+}
+
+.tab-bar__tab:hover:not(.tab-bar__tab--active) {
+  color: var(--text);
+}
+
+.tab-bar__tab--active {
+  background: var(--card-elevated);
+  color: var(--accent);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Open Globe button */
+.app__globe-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.875rem;
+  color: var(--accent);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: border-color var(--transition), background var(--transition), box-shadow var(--transition);
+}
+
+.app__globe-button:hover {
+  border-color: var(--accent);
+  background: var(--card-elevated);
+  box-shadow: 0 2px 16px var(--accent-glow);
+}
+
+.app__globe-button:active {
+  transform: translateY(1px);
+}
