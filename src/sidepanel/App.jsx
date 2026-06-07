@@ -3,19 +3,33 @@ import LocationInput from './LocationInput.jsx'
 import LocationCard from './LocationCard.jsx'
 import TabBar from './TabBar.jsx'
 import { useChromeStorage } from './useChromeStorage.js'
+import { geocode } from './geocode.js'
 import './styles.css'
 
 export default function App() {
   const [locations, setLocations] = useChromeStorage('locations', [])
   const [activeTab, setActiveTab] = useState('saved')
+  const [isAdding, setIsAdding] = useState(false)
+  const [error, setError] = useState(null)
 
-  function handleAdd(name) {
-    const newLocation = {
-      id: crypto.randomUUID(),
-      name,
-      addedAt: Date.now(),
+  async function handleAdd(name) {
+    setError(null)
+    setIsAdding(true)
+    try {
+      const { longitude, latitude, displayName } = await geocode(name)
+      const newLocation = {
+        id: crypto.randomUUID(),
+        name: displayName,
+        longitude,
+        latitude,
+        addedAt: Date.now(),
+      }
+      setLocations((prev) => [newLocation, ...prev])
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setIsAdding(false)
     }
-    setLocations((prev) => [newLocation, ...prev])
   }
 
   function handleDelete(id) {
@@ -54,7 +68,16 @@ export default function App() {
 
         {activeTab === 'saved' ? (
           <>
-            <LocationInput onAdd={handleAdd} />
+            <LocationInput onAdd={handleAdd} isLoading={isAdding} />
+            {error && (
+              <div className="app__error" role="alert">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 8v4M12 16h.01" />
+                </svg>
+                <span>{error}</span>
+              </div>
+            )}
             {locations.length === 0 ? (
               <div className="app__empty">
                 <div className="app__empty-icon" aria-hidden="true">

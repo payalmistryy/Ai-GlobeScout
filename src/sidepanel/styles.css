@@ -374,3 +374,28 @@ body {
   }
 }
 
+/* Error banner */
+.app__error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(220, 38, 38, 0.12);
+  border: 1px solid rgba(220, 38, 38, 0.4);
+  border-radius: var(--radius-sm);
+  padding: 0.625rem 0.75rem;
+  color: #fca5a5;
+  font-size: 0.8125rem;
+  margin-bottom: 1rem;
+  animation: locationCardEnter 280ms ease-out;
+}
+
+/* Loading spinner */
+.location-input__spinner {
+  animation: spinnerRotate 800ms linear infinite;
+}
+
+@keyframes spinnerRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
