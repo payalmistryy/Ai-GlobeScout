@@ -13,6 +13,7 @@ export default function App() {
     const newLocation = {
       id: crypto.randomUUID(),
       name,
+      addedAt: Date.now(),
     }
     setLocations((prev) => [newLocation, ...prev])
   }
@@ -34,10 +35,18 @@ export default function App() {
           alt="AI GlobeScout"
           className="app__logo-mark"
         />
-        <div>
+        <div className="app__header-text">
           <h1 className="app__title">AI GlobeScout</h1>
           <p className="app__tagline">Discover new places every day</p>
         </div>
+        {locations.length > 0 && (
+          <div className="app__counter" aria-label={`${locations.length} saved places`}>
+            <span className="app__counter-number">{locations.length}</span>
+            <span className="app__counter-label">
+              {locations.length === 1 ? 'place' : 'places'}
+            </span>
+          </div>
+        )}
       </header>
 
       <main className="app__main">
@@ -54,7 +63,10 @@ export default function App() {
                     <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                   </svg>
                 </div>
-                <p className="app__empty-text">Your saved places will appear here</p>
+                <p className="app__empty-text">Your bucket list starts here</p>
+                <p className="app__empty-hint">
+                  Try adding <span className="app__empty-example">Mount Hood</span> or <span className="app__empty-example">Kyoto</span>
+                </p>
               </div>
             ) : (
               <ul className="location-list">
@@ -74,8 +86,9 @@ export default function App() {
                 <path d="m21 21-4.3-4.3" />
               </svg>
             </div>
-            <p className="app__empty-text">
-              AI page scanning coming in Phase 3
+            <p className="app__empty-text">AI page scanning coming soon</p>
+            <p className="app__empty-hint">
+              Phase 3 will scan the page you&apos;re browsing and surface real travel destinations here
             </p>
           </div>
         )}

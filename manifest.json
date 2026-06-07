@@ -23,9 +23,20 @@
     "service_worker": "src/background.js",
     "type": "module"
   },
+  "sandbox": {
+    "pages": ["src/globe/cesium-sandbox.html"]
+  },
+  "content_security_policy": {
+    "sandbox": "sandbox allow-scripts allow-forms allow-popups allow-modals; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; child-src 'self' blob:;"
+  },
   "web_accessible_resources": [
     {
-      "resources": ["src/globe/index.html"],
+      "resources": [
+        "src/globe/index.html",
+        "src/globe/cesium-sandbox.html",
+        "assets/*",
+        "cesium/*"
+      ],
       "matches": ["<all_urls>"]
     }
   ]

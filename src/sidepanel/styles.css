@@ -71,7 +71,9 @@ body {
   height: 40px;
   border-radius: 50%;
   flex-shrink: 0;
-  box-shadow: 0 0 18px var(--accent-glow);
+  box-shadow:
+    0 0 18px var(--accent-glow),
+    0 0 12px rgba(255, 255, 255, 0.18);
 }
 
 .app__title {
@@ -299,3 +301,76 @@ body {
 .app__globe-button:active {
   transform: translateY(1px);
 }
+
+/* Header counter */
+.app__header-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.app__counter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--card-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.75rem;
+  min-width: 60px;
+  flex-shrink: 0;
+  cursor: default;
+  transition: box-shadow var(--transition), border-color var(--transition), transform var(--transition);
+}
+
+.app__counter:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 18px rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.app__counter-number {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.app__counter-label {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  margin-top: 0.125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Empty state hint */
+.app__empty-hint {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  text-align: center;
+  margin-top: 0.25rem;
+  max-width: 240px;
+  line-height: 1.5;
+}
+
+.app__empty-example {
+  color: var(--accent);
+  font-style: italic;
+}
+
+/* Location card fade-in animation */
+.location-list > li {
+  animation: locationCardEnter 280ms ease-out;
+}
+
+@keyframes locationCardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+

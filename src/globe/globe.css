@@ -23,7 +23,9 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  box-shadow: 0 0 20px var(--accent-glow);
+  box-shadow:
+    0 0 20px var(--accent-glow),
+    0 0 14px rgba(255, 255, 255, 0.18);
 }
 
 .globe-page__title {
@@ -43,12 +45,19 @@
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   box-shadow: var(--shadow);
   overflow: hidden;
   position: relative;
+  min-height: 600px;
+}
+
+.globe-page__cesium-frame {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+  position: absolute;
+  inset: 0;
 }
 
 .globe-page__placeholder {

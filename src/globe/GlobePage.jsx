@@ -1,8 +1,35 @@
+import { useEffect, useRef } from 'react'
 import { useChromeStorage } from '../sidepanel/useChromeStorage.js'
 import './globe.css'
 
 export default function GlobePage() {
   const [locations] = useChromeStorage('locations', [])
+  const iframeRef = useRef(null)
+
+  useEffect(() => {
+    const iframe = iframeRef.current
+    if (!iframe) return
+
+    function sendLocations() {
+      iframe.contentWindow?.postMessage(
+        { type: 'set-locations', locations },
+        '*'
+      )
+    }
+
+    // Respond when the sandbox tells us it's ready
+    function handleMessage(e) {
+      if (e.data?.type === 'cesium-ready') {
+        sendLocations()
+      }
+    }
+
+    window.addEventListener('message', handleMessage)
+    // Also send proactively in case the sandbox is already initialized
+    sendLocations()
+
+    return () => window.removeEventListener('message', handleMessage)
+  }, [locations])
 
   return (
     <div className="globe-page">
@@ -16,28 +43,19 @@ export default function GlobePage() {
           <h1 className="globe-page__title">AI GlobeScout</h1>
           <p className="globe-page__tagline">
             {locations.length === 0
-              ? 'Add places from the sidebar to populate the globe'
+              ? 'Add places from the sidebar to see them here'
               : `${locations.length} ${locations.length === 1 ? 'place' : 'places'} ready to explore`}
           </p>
         </div>
       </header>
 
       <main className="globe-page__main">
-        <div className="globe-page__placeholder">
-          <div className="globe-page__placeholder-orb" aria-hidden="true">
-            <svg viewBox="0 0 200 200" width="120" height="120" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <circle cx="100" cy="100" r="90" />
-              <ellipse cx="100" cy="100" rx="90" ry="40" />
-              <ellipse cx="100" cy="100" rx="40" ry="90" />
-              <path d="M10 100 Q 100 60 190 100" />
-              <path d="M10 100 Q 100 140 190 100" />
-            </svg>
-          </div>
-          <h2 className="globe-page__placeholder-title">Globe loads here</h2>
-          <p className="globe-page__placeholder-text">
-            Cesium World Terrain will render in this view in Phase 2B
-          </p>
-        </div>
+        <iframe
+          ref={iframeRef}
+          src="cesium-sandbox.html"
+          className="globe-page__cesium-frame"
+          title="AI GlobeScout 3D globe"
+        />
       </main>
     </div>
   )
