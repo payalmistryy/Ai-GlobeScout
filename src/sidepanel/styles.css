@@ -449,3 +449,132 @@ body {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+/* ---------------------------------------------------------------------------
+   Quick Scan
+   --------------------------------------------------------------------------- */
+
+/* Primary action for the tab — accent-filled so it reads as distinct from the
+   near-white Open Globe button while keeping the same silhouette. */
+.scan-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 9px;
+  color: var(--bg);
+  font-size: 12.5px;
+  font-weight: 600;
+  font-family: inherit;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--transition), opacity var(--transition), transform var(--transition);
+}
+
+.scan-button:hover:not(:disabled) {
+  background: #9BBCFF;
+}
+
+.scan-button:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
+.scan-button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.scan-status {
+  text-align: center;
+  font-size: 11.5px;
+  color: var(--text-dim);
+  padding: 6px 0;
+  animation: scanPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes scanPulse {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}
+
+.scan-results-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--text-dim);
+  padding: 0 2px;
+}
+
+.scan-clear {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: var(--text-dim);
+  font-size: 9.5px;
+  font-family: inherit;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  cursor: pointer;
+  transition: color var(--transition);
+}
+
+.scan-clear:hover {
+  color: var(--text);
+}
+
+.scan-caption {
+  text-align: center;
+  font-size: 10.5px;
+  color: var(--text-dim);
+  padding: 2px 0;
+  flex-shrink: 0;
+}
+
+/* Inherits .location-card; the accent pin marks it as AI-extracted. */
+.scan-result-card {
+  align-items: flex-start;
+}
+
+.scan-result-card .location-card__pin {
+  color: var(--accent);
+  margin-top: 1px;
+}
+
+.scan-result-card__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.scan-result-card__text .location-card__name {
+  flex: none;
+}
+
+.scan-result-card__meta {
+  font-size: 10.5px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Save is the primary affordance here, so unlike delete it stays visible. */
+.scan-result-card__save {
+  opacity: 1;
+  color: var(--text-dim);
+}
+
+.scan-result-card__save:hover {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
