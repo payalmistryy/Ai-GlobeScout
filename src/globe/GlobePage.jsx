@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useChromeStorage } from '../sidepanel/useChromeStorage.js'
 import GlobeMark from '../sidepanel/GlobeMark.jsx'
+import InsightPanel from './InsightPanel.jsx'
 import './globe.css'
 
 // The sandbox frames every pin on its first render. A fly-to issued in the
@@ -13,6 +14,10 @@ export default function GlobePage() {
   const iframeRef = useRef(null)
   const pendingFocusRef = useRef(null)
   const cesiumReadyRef = useRef(false)
+
+  // The pin whose insight panel is open. Cleared only by the close button —
+  // clicking elsewhere on the globe deliberately leaves the panel up.
+  const [selectedPin, setSelectedPin] = useState(null)
 
   const sendFlyTo = useCallback((longitude, latitude) => {
     iframeRef.current?.contentWindow?.postMessage(
@@ -76,6 +81,18 @@ export default function GlobePage() {
     return () => window.removeEventListener('message', handleMessage)
   }, [locations, flushPendingFocus])
 
+  // The sandbox reports pin clicks; opening the panel is the wrapper's job
+  // because only it can reach the network.
+  useEffect(() => {
+    function handlePinClick(e) {
+      if (e.data?.type === 'pin-clicked' && e.data.location) {
+        setSelectedPin(e.data.location)
+      }
+    }
+    window.addEventListener('message', handlePinClick)
+    return () => window.removeEventListener('message', handlePinClick)
+  }, [])
+
   // Relay "fly to this place" requests from the sidebar into the Cesium iframe.
   // This tab is already framed by now, so these go straight through.
   useEffect(() => {
@@ -113,6 +130,14 @@ export default function GlobePage() {
           src="cesium-sandbox.html"
           className="globe-page__cesium-frame"
           title="AI GlobeScout 3D globe"
+        />
+
+        {/* Keyed by pin so selecting a different place remounts with that
+            place's cached insights already in hand. */}
+        <InsightPanel
+          key={selectedPin?.id ?? 'none'}
+          location={selectedPin}
+          onClose={() => setSelectedPin(null)}
         />
       </main>
     </div>

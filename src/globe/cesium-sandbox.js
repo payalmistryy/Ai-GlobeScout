@@ -59,6 +59,9 @@ const PIN_SCALE = 0.22
 
 let viewer = null
 let locations = []
+// Same places keyed by entity id, so hit-testing a click is a lookup rather
+// than a scan of the whole list.
+const locationsById = new Map()
 let hasFramedOnce = false
 let pulseStartTime = null
 // While the camera is flying, freeze the pulse so the GPU/CPU can focus on
@@ -99,22 +102,65 @@ function initViewer() {
   // Establish a shared start time so all pins pulse in sync.
   pulseStartTime = Cesium.JulianDate.now()
 
-  // Click a pin → fly the camera to that location. Only the core/glow are
-  // valid targets (the big expanding rings are excluded so they can't hijack a
-  // click meant for a different, nearby pin).
+  // Click a pin → frame it and tell the wrapper to open its insight panel.
+  // drillPick rather than a plain pick: the expanding rings sit on top of the
+  // markers, so a single pick would usually return a ring — the filter below
+  // keeps only entities whose id is a location we actually know about, which
+  // also makes a click on empty terrain a no-op.
   const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas)
   handler.setInputAction((click) => {
     const picks = viewer.scene.drillPick(click.position, 8)
     const hit = picks.find(
-      (p) => p.id && typeof p.id.id === 'string' && locations.some((l) => l.id === p.id.id)
+      (p) => p.id && typeof p.id.id === 'string' && locationsById.has(p.id.id)
     )
-    if (hit && hit.id.position) {
-      const position = hit.id.position.getValue(viewer.clock.currentTime)
-      if (position) flyToPosition(position)
-    }
+    if (!hit) return
+
+    const location = locationsById.get(hit.id.id)
+    flyToLocation(location)
+
+    window.parent.postMessage(
+      {
+        type: 'pin-clicked',
+        location: {
+          id: location.id,
+          name: location.name,
+          longitude: location.longitude,
+          latitude: location.latitude,
+        },
+      },
+      '*'
+    )
   }, Cesium.ScreenSpaceEventType.LEFT_CLICK)
 
   window.parent.postMessage({ type: 'cesium-ready' }, '*')
+}
+
+// Altitude a clicked pin is framed from — wide enough to show the surrounding
+// region rather than dropping the camera onto the marker.
+const PIN_VIEW_ALTITUDE_M = 2_000_000
+
+/**
+ * Frame a clicked pin from above with its surroundings visible. Separate from
+ * flyToPosition so the sidebar's closer, tilted flight stays as it was.
+ */
+function flyToLocation(location) {
+  if (!viewer) return
+  isFlying = true
+
+  viewer.camera.flyTo({
+    destination: Cesium.Cartesian3.fromDegrees(
+      location.longitude,
+      location.latitude,
+      PIN_VIEW_ALTITUDE_M
+    ),
+    duration: 1.5,
+    complete: () => {
+      isFlying = false
+    },
+    cancel: () => {
+      isFlying = false
+    },
+  })
 }
 
 /**
@@ -176,6 +222,7 @@ function renderPins() {
   if (!viewer) return
 
   viewer.entities.removeAll()
+  locationsById.clear()
 
   locations.forEach((loc) => {
     if (typeof loc.longitude !== 'number' || typeof loc.latitude !== 'number') {
@@ -184,6 +231,9 @@ function renderPins() {
       )
       return
     }
+
+    // Only places that actually rendered a pin are clickable.
+    locationsById.set(loc.id, loc)
 
     const position = Cesium.Cartesian3.fromDegrees(loc.longitude, loc.latitude)
 
