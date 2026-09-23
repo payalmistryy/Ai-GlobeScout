@@ -34,8 +34,8 @@ const REASON_MESSAGES = {
  * direct display in the side panel.
  */
 export async function extractLocationsFromActiveTab() {
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
-
+  const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true })
+  console.log('AI GlobeScout — tab:', tab?.url, tab?.title, tab?.id, tab?.windowId)
   if (!tab?.id) {
     throw new Error(BROWSER_PAGE_ERROR)
   }
@@ -45,20 +45,22 @@ export async function extractLocationsFromActiveTab() {
 
   // Injection and messaging both fail on restricted pages that slipped past
   // the prefix check (a redirect, a missing host permission).
-  try {
+    try {
     await chrome.scripting.executeScript({
       target: { tabId: tab.id },
       files: [CONTENT_SCRIPT],
     })
-  } catch {
-    throw new Error(BROWSER_PAGE_ERROR)
+  } catch (err) {
+    console.error('AI GlobeScout — executeScript failed:', err)
+    throw new Error(`Can't scan: injection failed — ${err?.message || 'unknown'}`)
   }
 
   let page
   try {
     page = await chrome.tabs.sendMessage(tab.id, { type: 'extract-page-text' })
-  } catch {
-    throw new Error(BROWSER_PAGE_ERROR)
+  } catch (err) {
+    console.error('AI GlobeScout — sendMessage failed:', err)
+    throw new Error(`Can't scan: no response from page — ${err?.message || 'unknown'}`)
   }
 
   if (!page?.ok) {
