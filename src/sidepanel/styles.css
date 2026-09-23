@@ -1,24 +1,25 @@
 :root {
-  /* AI GlobeScout — Midnight Atmosphere */
-  --bg-deep: #050B1A;
-  --bg: #0A1628;
-  --card: #0F1F38;
-  --card-elevated: #162A4A;
-  --border: #1E3358;
-  --border-strong: #2C4A7C;
+  /* AI GlobeScout — neutral dark UI. Flat surfaces, hairline borders, one accent. */
+  --bg: #08090B;
+  --surface: #0D0F12;
+  --surface-hover: #141619;
+  --surface-active: #1A1D22;
 
-  --text: #F0F4F8;
-  --text-muted: #8BA3C7;
-  --text-dim: #5A7299;
+  --line: rgba(255, 255, 255, 0.07);
+  --line-strong: rgba(255, 255, 255, 0.14);
 
-  --accent: #4FD1C5;
-  --accent-glow: rgba(79, 209, 197, 0.35);
-  --gold: #FFD166;
+  --text: #ECEDEF;
+  --text-muted: #9096A0;
+  --text-dim: #5B616B;
 
-  --radius: 12px;
-  --radius-sm: 8px;
-  --shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
-  --transition: 200ms ease;
+  --accent: #7FA9FF;
+  --accent-soft: rgba(127, 169, 255, 0.14);
+  --danger: #FF6B6B;
+
+  --radius: 10px;
+  --radius-sm: 7px;
+  --radius-xs: 5px;
+  --transition: 140ms cubic-bezier(0.2, 0, 0.2, 1);
 }
 
 * {
@@ -35,189 +36,287 @@ body,
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-  background-color: var(--bg);
-  background-image:
-    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(79, 209, 197, 0.10) 0%, transparent 60%),
-    radial-gradient(ellipse 90% 60% at 50% 100%, rgba(46, 26, 90, 0.25) 0%, transparent 60%);
-  background-attachment: fixed;
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", system-ui, sans-serif;
+  background: var(--bg);
   color: var(--text);
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 13px;
+  line-height: 1.45;
+  letter-spacing: -0.006em;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--accent-soft);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.09);
+  border-radius: 99px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .app {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  padding: 1rem;
-  gap: 1rem;
+  height: 100vh;
+  padding: 14px 14px 12px;
+  gap: 14px;
 }
 
+/* Header — a single flat row, no card, no glow */
 .app__header {
   display: flex;
   align-items: center;
-  gap: 0.875rem;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1rem;
-  box-shadow: var(--shadow);
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.globe-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text);
+  flex-shrink: 0;
 }
 
 .app__logo-mark {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  box-shadow:
-    0 0 18px var(--accent-glow),
-    0 0 12px rgba(255, 255, 255, 0.18);
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
+}
+
+.app__header-text {
+  flex: 1;
+  min-width: 0;
 }
 
 .app__title {
-  font-size: 1.05rem;
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
   color: var(--text);
 }
 
 .app__tagline {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  margin-top: 0.125rem;
+  font-size: 11.5px;
+  color: var(--text-dim);
+  letter-spacing: -0.002em;
 }
 
+.app__counter {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 3px 8px;
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.app__counter-number {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.app__counter-label {
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+}
+
+/* Main column — flat, scrolls on its own */
 .app__main {
   flex: 1;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1rem;
-  box-shadow: var(--shadow);
-}
-
-.app__placeholder {
-  color: var(--text-dim);
-  font-style: italic;
-  text-align: center;
-  padding: 2rem 1rem;
-}
-
-/* Empty state */
-.app__empty {
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  padding: 3rem 1rem;
-  color: var(--text-dim);
+  gap: 12px;
 }
 
-.app__empty-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: var(--card-elevated);
-  border: 1px solid var(--border);
+/* Tab bar — compact segmented control */
+.tab-bar {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  gap: 2px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+}
+
+.tab-bar__tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-xs);
+  padding: 5px 10px;
+  color: var(--text-dim);
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  letter-spacing: -0.005em;
+  cursor: pointer;
+  transition: color var(--transition), background var(--transition);
+}
+
+.tab-bar__tab:hover:not(.tab-bar__tab--active) {
   color: var(--text-muted);
 }
 
-.app__empty-text {
-  font-size: 0.8125rem;
-  font-style: italic;
+.tab-bar__tab--active {
+  background: var(--surface-active);
+  color: var(--text);
 }
 
-/* Location input */
+/* Input row */
 .location-input {
   display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 3px 3px 3px 10px;
+  transition: border-color var(--transition), background var(--transition);
+}
+
+.location-input:focus-within {
+  border-color: var(--line-strong);
+  background: var(--surface-hover);
 }
 
 .location-input__field {
   flex: 1;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 0.5rem 0.75rem;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  padding: 5px 0;
   color: var(--text);
-  font-size: 0.875rem;
+  font-size: 12.5px;
   font-family: inherit;
+  letter-spacing: -0.005em;
   outline: none;
-  transition: border-color var(--transition), box-shadow var(--transition);
 }
 
 .location-input__field::placeholder {
   color: var(--text-dim);
 }
 
-.location-input__field:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-glow);
-}
-
 .location-input__button {
-  background: var(--accent);
-  color: var(--bg-deep);
+  background: transparent;
+  color: var(--text-muted);
   border: none;
-  border-radius: var(--radius-sm);
-  padding: 0 0.75rem;
+  border-radius: var(--radius-xs);
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background var(--transition), opacity var(--transition);
+  transition: background var(--transition), color var(--transition), opacity var(--transition);
 }
 
 .location-input__button:hover:not(:disabled) {
-  background: #6FE3D8;
+  background: var(--surface-active);
+  color: var(--text);
 }
 
 .location-input__button:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
+  opacity: 0.3;
+  cursor: default;
 }
 
-/* Location list */
+/* Section label above the list */
+.app__section-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--text-dim);
+  padding: 0 2px;
+}
+
+/* Location list — hairline-separated rows, not stacked cards */
 .location-list {
   list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  /* Hug the rows, shrink-and-scroll when the list outgrows the panel */
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
 }
 
-/* Location card */
+.location-list > li + li .location-card {
+  border-top: 1px solid var(--line);
+}
+
+.location-list > li {
+  animation: rowEnter 160ms ease-out;
+}
+
 .location-card {
   display: flex;
   align-items: center;
-  gap: 0.625rem;
-  background: var(--card-elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 0.625rem 0.75rem;
-  transition: border-color var(--transition);
+  gap: 9px;
+  padding: 9px 10px;
+  transition: background var(--transition);
+}
+
+.location-card--clickable {
+  cursor: pointer;
 }
 
 .location-card:hover {
-  border-color: var(--border-strong);
+  background: var(--surface-hover);
 }
 
 .location-card__pin {
-  color: var(--gold);
+  color: var(--text-dim);
   flex-shrink: 0;
   display: flex;
+  transition: color var(--transition);
+}
+
+.location-card--clickable:hover .location-card__pin {
+  color: var(--accent);
 }
 
 .location-card__name {
   flex: 1;
+  min-width: 0;
+  color: var(--text-muted);
+  font-size: 12.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color var(--transition);
+}
+
+.location-card:hover .location-card__name {
   color: var(--text);
-  font-size: 0.875rem;
 }
 
 .location-card__delete {
@@ -225,148 +324,115 @@ body {
   border: none;
   color: var(--text-dim);
   cursor: pointer;
-  padding: 0.25rem;
-  border-radius: 4px;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-xs);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color var(--transition), background var(--transition);
+  opacity: 0;
+  transition: color var(--transition), background var(--transition), opacity var(--transition);
+}
+
+.location-card:hover .location-card__delete,
+.location-card__delete:focus-visible {
+  opacity: 1;
 }
 
 .location-card__delete:hover {
   color: var(--text);
-  background: var(--bg);
+  background: var(--surface-active);
 }
 
-/* Tab bar */
-.tab-bar {
-  display: flex;
-  gap: 0.25rem;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 0.25rem;
-  margin-bottom: 1rem;
-}
-
-.tab-bar__tab {
+/* Empty state */
+.app__empty {
   flex: 1;
-  background: transparent;
-  border: none;
-  border-radius: 6px;
-  padding: 0.5rem 0.75rem;
-  color: var(--text-muted);
-  font-size: 0.8125rem;
-  font-weight: 500;
-  font-family: inherit;
-  cursor: pointer;
-  transition: color var(--transition), background var(--transition);
-}
-
-.tab-bar__tab:hover:not(.tab-bar__tab--active) {
-  color: var(--text);
-}
-
-.tab-bar__tab--active {
-  background: var(--card-elevated);
-  color: var(--accent);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-}
-
-/* Open Globe button */
-.app__globe-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 0.875rem;
-  color: var(--accent);
-  font-size: 0.9375rem;
-  font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
-  box-shadow: var(--shadow);
-  transition: border-color var(--transition), background var(--transition), box-shadow var(--transition);
-}
-
-.app__globe-button:hover {
-  border-color: var(--accent);
-  background: var(--card-elevated);
-  box-shadow: 0 2px 16px var(--accent-glow);
-}
-
-.app__globe-button:active {
-  transform: translateY(1px);
-}
-
-/* Header counter */
-.app__header-text {
-  flex: 1;
-  min-width: 0;
-}
-
-.app__counter {
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: var(--card-elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 0.5rem 0.75rem;
-  min-width: 60px;
-  flex-shrink: 0;
-  cursor: default;
-  transition: box-shadow var(--transition), border-color var(--transition), transform var(--transition);
-}
-
-.app__counter:hover {
-  border-color: rgba(255, 255, 255, 0.3);
-  box-shadow: 0 0 18px rgba(255, 255, 255, 0.2);
-  transform: translateY(-1px);
-}
-
-.app__counter-number {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--accent);
-  line-height: 1;
-}
-
-.app__counter-label {
-  font-size: 0.6875rem;
-  color: var(--text-muted);
-  margin-top: 0.125rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-/* Empty state hint */
-.app__empty-hint {
-  font-size: 0.75rem;
-  color: var(--text-dim);
+  justify-content: center;
+  gap: 8px;
+  padding: 40px 16px;
   text-align: center;
-  margin-top: 0.25rem;
-  max-width: 240px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.app__empty-icon {
+  color: var(--text-dim);
+  opacity: 0.6;
+  display: flex;
+  margin-bottom: 2px;
+}
+
+.app__empty-text {
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.app__empty-hint {
+  font-size: 11.5px;
+  color: var(--text-dim);
+  max-width: 230px;
   line-height: 1.5;
 }
 
 .app__empty-example {
-  color: var(--accent);
-  font-style: italic;
+  color: var(--text-muted);
 }
 
-/* Location card fade-in animation */
-.location-list > li {
-  animation: locationCardEnter 280ms ease-out;
+/* Error banner */
+.app__error {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(255, 107, 107, 0.07);
+  border: 1px solid rgba(255, 107, 107, 0.2);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  color: var(--danger);
+  font-size: 12px;
+  animation: rowEnter 160ms ease-out;
 }
 
-@keyframes locationCardEnter {
+/* Primary action */
+.app__globe-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  background: var(--text);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 9px;
+  color: var(--bg);
+  font-size: 12.5px;
+  font-weight: 600;
+  font-family: inherit;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--transition), transform var(--transition);
+}
+
+.app__globe-button:hover {
+  background: #FFFFFF;
+}
+
+.app__globe-button:active {
+  transform: scale(0.99);
+}
+
+:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 1px;
+}
+
+@keyframes rowEnter {
   from {
     opacity: 0;
-    transform: translateY(-6px);
+    transform: translateY(-3px);
   }
   to {
     opacity: 1;
@@ -374,28 +440,12 @@ body {
   }
 }
 
-/* Error banner */
-.app__error {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: rgba(220, 38, 38, 0.12);
-  border: 1px solid rgba(220, 38, 38, 0.4);
-  border-radius: var(--radius-sm);
-  padding: 0.625rem 0.75rem;
-  color: #fca5a5;
-  font-size: 0.8125rem;
-  margin-bottom: 1rem;
-  animation: locationCardEnter 280ms ease-out;
-}
-
 /* Loading spinner */
 .location-input__spinner {
-  animation: spinnerRotate 800ms linear infinite;
+  animation: spinnerRotate 700ms linear infinite;
 }
 
 @keyframes spinnerRotate {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
-

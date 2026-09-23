@@ -2,6 +2,7 @@ import { useState } from 'react'
 import LocationInput from './LocationInput.jsx'
 import LocationCard from './LocationCard.jsx'
 import TabBar from './TabBar.jsx'
+import GlobeMark from './GlobeMark.jsx'
 import { useChromeStorage } from './useChromeStorage.js'
 import { geocode } from './geocode.js'
 import './styles.css'
@@ -11,6 +12,9 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('saved')
   const [isAdding, setIsAdding] = useState(false)
   const [error, setError] = useState(null)
+
+  // Back-filling coordinates for places saved without them lives in the
+  // service worker (background.js) — one writer for `locations` avoids races.
 
   async function handleAdd(name) {
     setError(null)
@@ -36,19 +40,43 @@ export default function App() {
     setLocations((prev) => prev.filter((loc) => loc.id !== id))
   }
 
-  function openGlobe() {
+  // Clicking a saved place flies the globe to it. The request goes to
+  // storage.local first so a globe tab we're about to open can pick it up on
+  // mount; an already-open one gets it live via storage.onChanged.
+  async function handleFocus(loc) {
+    if (typeof loc.longitude !== 'number' || typeof loc.latitude !== 'number') {
+      return
+    }
+    await chrome.storage.local.set({
+      focusRequest: {
+        id: loc.id,
+        longitude: loc.longitude,
+        latitude: loc.latitude,
+        ts: Date.now(),
+      },
+    })
+    openGlobe()
+  }
+
+  // Focus the globe tab if one is already open, rather than stacking up a new
+  // tab on every click.
+  async function openGlobe() {
     const url = chrome.runtime.getURL('src/globe/index.html')
-    chrome.tabs.create({ url })
+    const [existing] = await chrome.tabs.query({ url })
+
+    if (existing) {
+      await chrome.tabs.update(existing.id, { active: true })
+      await chrome.windows.update(existing.windowId, { focused: true })
+      return
+    }
+
+    await chrome.tabs.create({ url })
   }
 
   return (
     <div className="app">
       <header className="app__header">
-        <img
-          src="/icons/icon48.png"
-          alt="AI GlobeScout"
-          className="app__logo-mark"
-        />
+        <GlobeMark className="app__logo-mark" />
         <div className="app__header-text">
           <h1 className="app__title">AI GlobeScout</h1>
           <p className="app__tagline">Discover new places every day</p>
@@ -71,7 +99,7 @@ export default function App() {
             <LocationInput onAdd={handleAdd} isLoading={isAdding} />
             {error && (
               <div className="app__error" role="alert">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="10" />
                   <path d="M12 8v4M12 16h.01" />
                 </svg>
@@ -81,9 +109,10 @@ export default function App() {
             {locations.length === 0 ? (
               <div className="app__empty">
                 <div className="app__empty-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="9" />
+                    <ellipse cx="12" cy="12" rx="4" ry="9" />
+                    <path d="M3.4 9h17.2M3.4 15h17.2" />
                   </svg>
                 </div>
                 <p className="app__empty-text">Your bucket list starts here</p>
@@ -92,19 +121,25 @@ export default function App() {
                 </p>
               </div>
             ) : (
-              <ul className="location-list">
-                {locations.map((loc) => (
-                  <li key={loc.id}>
-                    <LocationCard location={loc} onDelete={handleDelete} />
-                  </li>
-                ))}
-              </ul>
+              <>
+                <div className="app__section-label">
+                  <span>Saved</span>
+                  <span>{locations.length}</span>
+                </div>
+                <ul className="location-list">
+                  {locations.map((loc) => (
+                    <li key={loc.id}>
+                      <LocationCard location={loc} onDelete={handleDelete} onFocus={handleFocus} />
+                    </li>
+                  ))}
+                </ul>
+              </>
             )}
           </>
         ) : (
           <div className="app__empty">
             <div className="app__empty-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="11" cy="11" r="8" />
                 <path d="m21 21-4.3-4.3" />
               </svg>
@@ -118,9 +153,10 @@ export default function App() {
       </main>
 
       <button className="app__globe-button" onClick={openGlobe}>
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="10" />
-          <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="9" />
+          <ellipse cx="12" cy="12" rx="4" ry="9" />
+          <path d="M3.4 9h17.2M3.4 15h17.2" />
         </svg>
         Open Globe
       </button>
