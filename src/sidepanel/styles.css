@@ -578,3 +578,34 @@ body {
   color: var(--accent);
   background: var(--accent-soft);
 }
+
+/* Saved-from-scan state — the accent tint marks the row as claimed. There is
+   no green token in the palette, so the accent carries the "it's yours now"
+   signal rather than introducing a one-off color. */
+.scan-result-card--saved,
+.scan-result-card--saved:hover {
+  background: var(--accent-soft);
+}
+
+.scan-result-card--saved .location-card__name {
+  color: var(--text);
+}
+
+.scan-result-card--saved .scan-result-card__save {
+  color: var(--accent);
+}
+
+.scan-result-card--saved .scan-result-card__save:hover {
+  background: transparent;
+  color: var(--accent);
+}
+
+/* Check drawn in the panel background so it reads as a knockout on the disc. */
+.scan-result-card__check {
+  stroke: var(--bg);
+}
+
+.scan-result-card__save:disabled {
+  opacity: 1;
+  cursor: default;
+}

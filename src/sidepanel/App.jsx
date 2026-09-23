@@ -6,8 +6,46 @@ import TabBar from './TabBar.jsx'
 import GlobeMark from './GlobeMark.jsx'
 import { useChromeStorage } from './useChromeStorage.js'
 import { geocode } from './geocode.js'
-import { extractLocationsFromActiveTab } from './extract.js'
+import {
+  extractLocationsFromActiveTab,
+  geocodeAndBuildLocation,
+} from './extract.js'
 import './styles.css'
+
+// "Tokyo", "Tokyo, Japan" and "Tokyo, Kantō, Japan" are the same place — keep
+// the part before the first comma so all three collapse to "tokyo".
+function normalizeName(name) {
+  return String(name || '')
+    .toLowerCase()
+    .split(',')[0]
+    .trim()
+}
+
+// ~0.01° is roughly a kilometre. Catches the same place arriving under two
+// different display names (Claude's "Kyoto" vs a hand-typed "Kyoto, Japan").
+const COORD_EPSILON = 0.01
+
+function isDuplicate(locations, candidate) {
+  const candidateName = normalizeName(candidate.name)
+
+  return locations.some((loc) => {
+    if (candidateName && normalizeName(loc.name) === candidateName) {
+      return true
+    }
+    return (
+      typeof loc.longitude === 'number' &&
+      typeof loc.latitude === 'number' &&
+      Math.abs(loc.longitude - candidate.longitude) < COORD_EPSILON &&
+      Math.abs(loc.latitude - candidate.latitude) < COORD_EPSILON
+    )
+  })
+}
+
+// Scan results have no id of their own; name+index is stable for the lifetime
+// of one scan session, which is exactly how long the save markers live.
+function scanKey(scanResult, index) {
+  return `${scanResult.name}-${index}`
+}
 
 export default function App() {
   const [locations, setLocations] = useChromeStorage('locations', [])
@@ -23,6 +61,13 @@ export default function App() {
   const [scanStatus, setScanStatus] = useState(null)
   const [scanError, setScanError] = useState(null)
   const statusTimer = useRef(null)
+
+  // Save-to-bucket-list state. Markers are per scan session; the durable
+  // record is chrome.storage.sync.
+  const [savingId, setSavingId] = useState(null)
+  const [savedIds, setSavedIds] = useState(() => new Set())
+  const [saveError, setSaveError] = useState(null)
+  const saveErrorTimer = useRef(null)
 
   // Back-filling coordinates for places saved without them lives in the
   // service worker (background.js) — one writer for `locations` avoids races.
@@ -73,6 +118,10 @@ export default function App() {
     setScanError(null)
     setScanResults(null)
     setScanSource(null)
+    // New scan, new session: last scan's save markers don't apply to these cards.
+    setSavedIds(new Set())
+    setSaveError(null)
+    clearTimeout(saveErrorTimer.current)
     setIsScanning(true)
 
     // Two-step status: reading the page is near-instant, the model call isn't.
@@ -99,12 +148,54 @@ export default function App() {
     setScanResults(null)
     setScanSource(null)
     setScanError(null)
+    setSavedIds(new Set())
+    setSaveError(null)
+    clearTimeout(saveErrorTimer.current)
   }
 
-  // Saving a scan result to the bucket list lands in the next phase — it needs
-  // geocoding to fill in the coordinates the stored shape requires.
-  function handleSaveScanResult(location) {
-    console.log('[GlobeScout] Save from Quick Scan (not yet implemented):', location)
+  function showSaveError(message) {
+    setSaveError(message)
+    clearTimeout(saveErrorTimer.current)
+    saveErrorTimer.current = setTimeout(() => setSaveError(null), 3000)
+  }
+
+  async function handleSaveScanResult(scanResult, scanResultIndex) {
+    const key = scanKey(scanResult, scanResultIndex)
+
+    // One geocode in flight at a time — `savingId` tracks a single card, so a
+    // second concurrent save would steal the first card's spinner.
+    if (savingId || savedIds.has(key)) return
+
+    setSaveError(null)
+    clearTimeout(saveErrorTimer.current)
+    setSavingId(key)
+
+    try {
+      const { longitude, latitude, displayName } =
+        await geocodeAndBuildLocation(scanResult)
+
+      const newLocation = {
+        id: crypto.randomUUID(),
+        name: displayName || scanResult.name,
+        longitude,
+        latitude,
+        addedAt: Date.now(),
+      }
+
+      if (isDuplicate(locations, newLocation)) {
+        showSaveError('Already in your bucket list')
+      } else {
+        setLocations((prev) => [newLocation, ...prev])
+      }
+
+      // Either way the place is on their list, so the button settles into the
+      // saved state rather than inviting a pointless retry.
+      setSavedIds((prev) => new Set(prev).add(key))
+    } catch (err) {
+      showSaveError(err.message)
+    } finally {
+      setSavingId(null)
+    }
   }
 
   // Focus the globe tab if one is already open, rather than stacking up a new
@@ -215,6 +306,16 @@ export default function App() {
               </div>
             )}
 
+            {saveError && (
+              <div className="app__error" role="alert">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 8v4M12 16h.01" />
+                </svg>
+                <span>{saveError}</span>
+              </div>
+            )}
+
             {isScanning && (
               <p className="scan-status" role="status">
                 {scanStatus}
@@ -264,14 +365,19 @@ export default function App() {
                   </button>
                 </div>
                 <ul className="location-list">
-                  {scanResults.map((loc, i) => (
-                    <li key={`${loc.name}-${i}`}>
-                      <ScanResultCard
-                        location={loc}
-                        onSave={handleSaveScanResult}
-                      />
-                    </li>
-                  ))}
+                  {scanResults.map((loc, i) => {
+                    const key = scanKey(loc, i)
+                    return (
+                      <li key={key}>
+                        <ScanResultCard
+                          location={loc}
+                          onSave={() => handleSaveScanResult(loc, i)}
+                          isSaving={savingId === key}
+                          isSaved={savedIds.has(key)}
+                        />
+                      </li>
+                    )
+                  })}
                 </ul>
                 <p className="scan-caption">
                   Cleared automatically when you scan another page
