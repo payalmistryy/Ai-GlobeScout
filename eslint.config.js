@@ -5,7 +5,7 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores(['dist', '.netlify']),
   {
     files: ['**/*.{js,jsx}'],
     extends: [
@@ -17,5 +17,10 @@ export default defineConfig([
       globals: { ...globals.browser, ...globals.webextensions },
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
+  },
+  {
+    // Netlify Functions run on Node, not in the browser.
+    files: ['netlify/**/*.js'],
+    languageOptions: { globals: globals.node },
   },
 ])

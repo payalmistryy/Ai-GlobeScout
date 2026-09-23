@@ -1,0 +1,10 @@
+[build]
+  functions = "netlify/functions"
+
+[dev]
+  port = 8888
+  # The extension's frontend is built separately (`npx vite build`) or served by
+  # `npm run dev` on 5173 — `netlify dev` should only host the functions, not
+  # try to launch Vite itself and fight over the port.
+  framework = "#static"
+  publish = "dist"
