@@ -20,6 +20,11 @@ const UNSCRIPTABLE_PREFIXES = [
 const BROWSER_PAGE_ERROR = "Can't scan this page (browser page)"
 const NO_CONTENT_ERROR = 'This page has no readable content to scan'
 const GENERIC_ERROR = "Couldn't scan this page"
+// The request never reached the proxy at all — backend not running, wrong
+// port, blocked by CORS. Distinct from a 503, which means the proxy answered
+// but its upstream didn't, and from an empty result, which means it worked.
+const UNREACHABLE_ERROR =
+  "Can't reach AI service — check that the backend is running"
 
 // The proxy degrades every Anthropic-side failure to a 503 carrying a reason;
 // the underlying cause is never exposed, so map it to something actionable.
@@ -47,8 +52,8 @@ async function tryGeocode(query) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: query }),
     })
-  } catch {
-    throw new Error(REASON_MESSAGES.upstream)
+  } catch (err) {
+    throw new Error(UNREACHABLE_ERROR, { cause: err })
   }
 
   if (response.status === 404) return null
@@ -133,7 +138,6 @@ export async function geocodeAndBuildLocation(scanResult) {
  */
 export async function extractLocationsFromActiveTab() {
   const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true })
-  console.log('AI GlobeScout — tab:', tab?.url, tab?.title, tab?.id, tab?.windowId)
   if (!tab?.id) {
     throw new Error(BROWSER_PAGE_ERROR)
   }
@@ -149,16 +153,14 @@ export async function extractLocationsFromActiveTab() {
       files: [CONTENT_SCRIPT],
     })
   } catch (err) {
-    console.error('AI GlobeScout — executeScript failed:', err)
-    throw new Error(`Can't scan: injection failed — ${err?.message || 'unknown'}`)
+    throw new Error(BROWSER_PAGE_ERROR, { cause: err })
   }
 
   let page
   try {
     page = await chrome.tabs.sendMessage(tab.id, { type: 'extract-page-text' })
   } catch (err) {
-    console.error('AI GlobeScout — sendMessage failed:', err)
-    throw new Error(`Can't scan: no response from page — ${err?.message || 'unknown'}`)
+    throw new Error(BROWSER_PAGE_ERROR, { cause: err })
   }
 
   if (!page?.ok) {
@@ -172,8 +174,8 @@ export async function extractLocationsFromActiveTab() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text: page.text }),
     })
-  } catch {
-    throw new Error(REASON_MESSAGES.upstream)
+  } catch (err) {
+    throw new Error(UNREACHABLE_ERROR, { cause: err })
   }
 
   let data = null
@@ -183,6 +185,11 @@ export async function extractLocationsFromActiveTab() {
     // Fall through to the status handling below.
   }
 
+  // The proxy's own per-IP limiter, as opposed to a 503 carrying
+  // reason: 'rate_limit', which is the model provider throttling us.
+  if (response.status === 429) {
+    throw new Error(REASON_MESSAGES.rate_limit)
+  }
   if (response.status === 503) {
     throw new Error(REASON_MESSAGES[data?.reason] || REASON_MESSAGES.upstream)
   }

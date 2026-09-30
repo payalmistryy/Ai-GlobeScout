@@ -12,13 +12,29 @@ import {
 } from './extract.js'
 import './styles.css'
 
-// "Tokyo", "Tokyo, Japan" and "Tokyo, Kantō, Japan" are the same place — keep
-// the part before the first comma so all three collapse to "tokyo".
-function normalizeName(name) {
+// Whether two place names refer to the same place:
+//   - both qualified (each carries a comma) → compare in full, so
+//     "Springfield, IL" and "Springfield, MO" stay distinct
+//   - either unqualified → compare only up to the first comma, so a bare
+//     "Tokyo" still matches "Tokyo, Japan"
+// Same place under two unlike names is left to the coordinate check below.
+function normalizeFull(name) {
   return String(name || '')
     .toLowerCase()
-    .split(',')[0]
+    .replace(/\s*,\s*/g, ', ')
     .trim()
+}
+
+function normalizeHead(name) {
+  return normalizeFull(name).split(',')[0].trim()
+}
+
+function namesMatch(a, b) {
+  const bothQualified =
+    String(a || '').includes(',') && String(b || '').includes(',')
+  const left = bothQualified ? normalizeFull(a) : normalizeHead(a)
+  const right = bothQualified ? normalizeFull(b) : normalizeHead(b)
+  return Boolean(left) && left === right
 }
 
 // ~0.01° is roughly a kilometre. Catches the same place arriving under two
@@ -26,10 +42,8 @@ function normalizeName(name) {
 const COORD_EPSILON = 0.01
 
 function isDuplicate(locations, candidate) {
-  const candidateName = normalizeName(candidate.name)
-
   return locations.some((loc) => {
-    if (candidateName && normalizeName(loc.name) === candidateName) {
+    if (namesMatch(loc.name, candidate.name)) {
       return true
     }
     return (

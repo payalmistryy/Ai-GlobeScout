@@ -9,6 +9,12 @@ const LIVE_ENDPOINT = `${API_BASE_URL}/.netlify/functions/live`
 // change between clicks; live conditions deliberately are never cached.
 const evergreenCache = new Map()
 
+// Requests that haven't settled yet, keyed by location id. Clicking A → B → A
+// faster than the first call returns would otherwise fire a second identical
+// request, since nothing is in the cache to stop it. Joining the pending
+// promise instead means one call per place, however fast the clicking.
+const inFlightInsights = new Map()
+
 const LOADING = 'loading'
 const ERROR = 'error'
 
@@ -57,12 +63,25 @@ export default function InsightPanel({ location, onClose }) {
     const isStale = () => requestToken.current !== token
 
     if (!evergreenCache.has(location.id)) {
-      fetch(INSIGHTS_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: location.name, region: '', country: '' }),
-      })
-        .then((res) => (res.ok ? res.json() : Promise.reject(new Error(res.status))))
+      let request = inFlightInsights.get(location.id)
+
+      if (!request) {
+        request = fetch(INSIGHTS_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: location.name, region: '', country: '' }),
+        }).then((res) => (res.ok ? res.json() : Promise.reject(new Error(res.status))))
+
+        inFlightInsights.set(location.id, request)
+        // Free the slot once settled either way. The swallowing catch keeps
+        // this bookkeeping branch from surfacing as an unhandled rejection —
+        // the real handling is on the shared promise below.
+        request
+          .catch(() => {})
+          .finally(() => inFlightInsights.delete(location.id))
+      }
+
+      request
         .then((data) => {
           evergreenCache.set(location.id, data)
           if (!isStale()) setEvergreen(data)

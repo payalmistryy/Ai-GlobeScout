@@ -23,4 +23,9 @@ export default defineConfig([
     files: ['netlify/**/*.js'],
     languageOptions: { globals: globals.node },
   },
+  {
+    // The Vite config is Node too — it reads __dirname and the filesystem.
+    files: ['vite.config.js'],
+    languageOptions: { globals: globals.node },
+  },
 ])
